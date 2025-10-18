@@ -1,0 +1,25 @@
+# Pyramid Tool - Requirements
+# Python 3.12 compatible
+# Tested configuration for Windows environment
+
+# GUI
+PyQt5>=5.15.9
+
+# Image processing
+Pillow>=10.0.0
+
+# Geospatial processing
+# Install GDAL from local wheel
+./gdal/GDAL-3.8.4-cp312-cp312-win_amd64.whl
+
+geopandas>=0.14.0
+fiona>=1.9.5
+shapely>=2.0.2
+pyproj>=3.6.1
+
+# Numerical computing
+# Important: keep NumPy below 2.0 for GDAL compatibility
+numpy>=1.24.0,<2.0
+
+# Compatibility helper for native extensions
+pybind11>=2.12
