@@ -125,7 +125,7 @@ class PyramidToolGUI(QMainWindow):
         grid_layout = QHBoxLayout()
         grid_layout.addWidget(QLabel("Mreža listova (shapefile):"))
         self.grid_edit = QLineEdit()
-        self.grid_edit.setPlaceholderText("ml4096.shp")
+        self.grid_edit.setPlaceholderText("ml5000.shp")
         grid_layout.addWidget(self.grid_edit)
         self.grid_browse_btn = QPushButton("Browse...")
         self.grid_browse_btn.clicked.connect(self.browse_grid)
