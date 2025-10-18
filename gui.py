@@ -180,25 +180,37 @@ class PyramidToolGUI(QMainWindow):
         button_layout = QHBoxLayout()
         self.start_btn = QPushButton("Start")
         self.start_btn.clicked.connect(lambda: self.start_processing(checkpoint=None))
-        self.start_btn.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
+        self.start_btn.setStyleSheet("""
+            QPushButton {background-color: #4CAF50; color: white; font-weight: bold;}
+            QPushButton:disabled {background-color: #cccccc; color: #666666;}
+        """)  # Dodan stil za disabled stanje
         button_layout.addWidget(self.start_btn)
 
         self.stop_btn = QPushButton("Stop")
         self.stop_btn.clicked.connect(self.stop_processing)
         self.stop_btn.setEnabled(False)
-        self.stop_btn.setStyleSheet("background-color: #f44336; color: white; font-weight: bold;")
+        self.stop_btn.setStyleSheet("""
+            QPushButton {background-color: #f44336; color: white; font-weight: bold;}
+            QPushButton:disabled {background-color: #cccccc; color: #666666;}
+        """)  # Dodan stil za disabled stanje
         button_layout.addWidget(self.stop_btn)
 
         self.continue_btn = QPushButton("Continue")
         self.continue_btn.clicked.connect(self.continue_processing)
         self.continue_btn.setEnabled(False)
-        self.continue_btn.setStyleSheet("background-color: #FF9800; color: white; font-weight: bold;")
+        self.continue_btn.setStyleSheet("""
+            QPushButton {background-color: #FF9800; color: white; font-weight: bold;}
+            QPushButton:disabled {background-color: #cccccc; color: #666666;}
+        """)  # Dodan stil za disabled stanje
         button_layout.addWidget(self.continue_btn)
 
         self.exit_btn = QPushButton("Exit")
         self.exit_btn.clicked.connect(self.close)
         self.exit_btn.setEnabled(True)
-        self.exit_btn.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold;")
+        self.exit_btn.setStyleSheet("""
+            QPushButton {background-color: #2196F3; color: white; font-weight: bold;}
+            QPushButton:disabled {background-color: #cccccc; color: #666666;}
+        """)  # Dodan stil za disabled stanje
         button_layout.addWidget(self.exit_btn)
         main_layout.addLayout(button_layout)
 
@@ -285,8 +297,8 @@ class PyramidToolGUI(QMainWindow):
         if self.processor:
             self.processor.stop()
             self.is_paused = True
-            self.stop_btn.setEnabled(False)
             self.add_status("Zaustavljanje u tijeku... Pričekajte završetak trenutnog koraka.")
+            self.set_processing_state(False, is_paused=True)  # Postavlja pauzirano stanje
             logger.info("Zahtjev za zaustavljanje")
             QApplication.processEvents()
 
@@ -296,11 +308,8 @@ class PyramidToolGUI(QMainWindow):
             QMessageBox.warning(self, "Greška", "Checkpoint datoteka nije pronađena!")
             return
 
-        # Resetuj pauziranu zastavu
         self.is_paused = False
         self.add_status("Nastavak obrade s checkpointa...")
-
-        # Kreiraj processor s datotekama iz checkpointa
         input_dir = checkpoint.get('input_dir')
         output_dir = checkpoint.get('output_dir')
         grid_path = checkpoint.get('grid_shapefile')
@@ -311,7 +320,7 @@ class PyramidToolGUI(QMainWindow):
         self.connect_thread_signals()
         self.processing_thread.start()
 
-        self.set_processing_state(True)
+        self.set_processing_state(True)  # Postavlja stanje tijekom obrade
         logger.info("Obrada nastavljena s checkpointa")
 
     def on_processing_finished(self, success):
@@ -319,22 +328,19 @@ class PyramidToolGUI(QMainWindow):
         if success:
             QMessageBox.information(self, "Završeno", "Obrada je uspješno završena!")
             self.reset_ui_state()
+            self.set_processing_state(False)  # Vraća u početno stanje
             self.set_inputs_enabled(True)
-            self.start_btn.setEnabled(True)
-            self.stop_btn.setEnabled(False)
         else:
             if self.is_paused:
                 self.add_status("Obrada je pauzirana. Kliknite 'Continue' za nastavak.")
-                self.continue_btn.setEnabled(True)
-                self.start_btn.setEnabled(False)
-                self.stop_btn.setEnabled(False)
+                self.set_processing_state(False, is_paused=True)  # Postavlja pauzirano stanje
             elif self.is_exiting:
                 self.add_status("Aplikacija se zatvara po zahtjevu korisnika.")
             else:
                 QMessageBox.critical(self, "Greška", "Došlo je do greške tijekom obrade.")
                 self.reset_ui_state()
+                self.set_processing_state(False)  # Vraća u početno stanje
                 self.set_inputs_enabled(True)
-                self.start_btn.setEnabled(True)
 
         if not self.is_paused:
             self.is_paused = False
@@ -364,11 +370,26 @@ class PyramidToolGUI(QMainWindow):
                     self.processing_thread.terminate()
         event.accept()
 
-    def set_processing_state(self, is_processing):
+    def set_processing_state(self, is_processing, is_paused=False):
         self.is_processing = is_processing
-        self.start_btn.setEnabled(not is_processing)
-        self.stop_btn.setEnabled(is_processing)
-        self.continue_btn.setEnabled(False)
+        if is_processing:
+            # Stanje tijekom obrade: Stop i Exit omogućeni, Start i Continue onemogućeni
+            self.start_btn.setEnabled(False)
+            self.stop_btn.setEnabled(True)
+            self.continue_btn.setEnabled(False)
+            self.exit_btn.setEnabled(True)
+        elif is_paused:
+            # Stanje nakon pauziranja: Continue i Exit omogućeni, Start i Stop onemogućeni
+            self.start_btn.setEnabled(False)
+            self.stop_btn.setEnabled(False)
+            self.continue_btn.setEnabled(True)
+            self.exit_btn.setEnabled(True)
+        else:
+            # Početno stanje ili nakon završetka: Start i Exit omogućeni, Stop i Continue onemogućeni
+            self.start_btn.setEnabled(True)
+            self.stop_btn.setEnabled(False)
+            self.continue_btn.setEnabled(False)
+            self.exit_btn.setEnabled(True)
         self.set_inputs_enabled(not is_processing)
 
     def set_inputs_enabled(self, enabled):
