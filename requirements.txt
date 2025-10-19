@@ -10,7 +10,8 @@ Pillow>=10.0.0
 
 # Geospatial processing
 # Install GDAL from local wheel
-./gdal/GDAL-3.9.2-cp312-cp312-win_amd64.whl
+#./gdal/GDAL-3.9.2-cp312-cp312-win_amd64.whl
+./gdal/GDAL-3.8.4-cp312-cp312-win_amd64.whl
 
 geopandas>=0.14.0
 fiona>=1.9.5
