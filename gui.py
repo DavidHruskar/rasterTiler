@@ -42,7 +42,7 @@ class ProcessingThread(QThread):
     def run(self):
         """Izvršava obradu"""
         try:
-            self.status_message.emit("Započinjem obradu...")
+            self.status_message.emit("Starting processing with gdal2tiles...")
 
             def eta_cb(eta_str):
                 self.eta.emit(eta_str)
@@ -140,7 +140,7 @@ class PyramidToolGUI(QMainWindow):
         settings_layout = QHBoxLayout()
         settings_layout.addWidget(QLabel("Format tile-ova:"))
         self.format_combo = QComboBox()
-        self.format_combo.addItems(["PNG (.png + .pgw)", "TIFF (.tif)"])
+        self.format_combo.addItems(["PNG (.png + .pgw)", "JPG (.jpg + .jgw)"])
         settings_layout.addWidget(self.format_combo)
         settings_layout.addStretch()
         settings_group.setLayout(settings_layout)
@@ -153,7 +153,7 @@ class PyramidToolGUI(QMainWindow):
         self.vrt_progress_bar = QProgressBar()
         progress_layout.addWidget(self.vrt_progress_bar)
 
-        progress_layout.addWidget(QLabel("2. Rezanje tile-ova:"))
+        progress_layout.addWidget(QLabel("2. Generating tiles with gdal2tiles:"))
         self.cut_progress_bar = QProgressBar()
         progress_layout.addWidget(self.cut_progress_bar)
 
@@ -183,7 +183,7 @@ class PyramidToolGUI(QMainWindow):
         self.start_btn.setStyleSheet("""
             QPushButton {background-color: #4CAF50; color: white; font-weight: bold;}
             QPushButton:disabled {background-color: #cccccc; color: #666666;}
-        """)  # Dodan stil za disabled stanje
+        """)
         button_layout.addWidget(self.start_btn)
 
         self.stop_btn = QPushButton("Stop")
@@ -192,7 +192,7 @@ class PyramidToolGUI(QMainWindow):
         self.stop_btn.setStyleSheet("""
             QPushButton {background-color: #f44336; color: white; font-weight: bold;}
             QPushButton:disabled {background-color: #cccccc; color: #666666;}
-        """)  # Dodan stil za disabled stanje
+        """)
         button_layout.addWidget(self.stop_btn)
 
         self.continue_btn = QPushButton("Continue")
@@ -201,7 +201,7 @@ class PyramidToolGUI(QMainWindow):
         self.continue_btn.setStyleSheet("""
             QPushButton {background-color: #FF9800; color: white; font-weight: bold;}
             QPushButton:disabled {background-color: #cccccc; color: #666666;}
-        """)  # Dodan stil za disabled stanje
+        """)
         button_layout.addWidget(self.continue_btn)
 
         self.exit_btn = QPushButton("Exit")
@@ -210,7 +210,7 @@ class PyramidToolGUI(QMainWindow):
         self.exit_btn.setStyleSheet("""
             QPushButton {background-color: #2196F3; color: white; font-weight: bold;}
             QPushButton:disabled {background-color: #cccccc; color: #666666;}
-        """)  # Dodan stil za disabled stanje
+        """)
         button_layout.addWidget(self.exit_btn)
         main_layout.addLayout(button_layout)
 
@@ -279,7 +279,7 @@ class PyramidToolGUI(QMainWindow):
                 QMessageBox.critical(self, "Greška", f"Mreža listova nije pronađena:\n{grid_path}")
                 return
 
-            tile_format = 'png' if 'PNG' in self.format_combo.currentText() else 'tif'
+            tile_format = 'png' if 'PNG' in self.format_combo.currentText() else 'jpg'
 
         self.processor = TileProcessor(input_dir, output_dir, grid_path, tile_format)
         if not checkpoint:
@@ -298,7 +298,7 @@ class PyramidToolGUI(QMainWindow):
             self.processor.stop()
             self.is_paused = True
             self.add_status("Zaustavljanje u tijeku... Pričekajte završetak trenutnog koraka.")
-            self.set_processing_state(False, is_paused=True)  # Postavlja pauzirano stanje
+            self.set_processing_state(False, is_paused=True)
             logger.info("Zahtjev za zaustavljanje")
             QApplication.processEvents()
 
@@ -320,7 +320,7 @@ class PyramidToolGUI(QMainWindow):
         self.connect_thread_signals()
         self.processing_thread.start()
 
-        self.set_processing_state(True)  # Postavlja stanje tijekom obrade
+        self.set_processing_state(True)
         logger.info("Obrada nastavljena s checkpointa")
 
     def on_processing_finished(self, success):
@@ -328,18 +328,18 @@ class PyramidToolGUI(QMainWindow):
         if success:
             QMessageBox.information(self, "Završeno", "Obrada je uspješno završena!")
             self.reset_ui_state()
-            self.set_processing_state(False)  # Vraća u početno stanje
+            self.set_processing_state(False)
             self.set_inputs_enabled(True)
         else:
             if self.is_paused:
                 self.add_status("Obrada je pauzirana. Kliknite 'Continue' za nastavak.")
-                self.set_processing_state(False, is_paused=True)  # Postavlja pauzirano stanje
+                self.set_processing_state(False, is_paused=True)
             elif self.is_exiting:
                 self.add_status("Aplikacija se zatvara po zahtjevu korisnika.")
             else:
                 QMessageBox.critical(self, "Greška", "Došlo je do greške tijekom obrade.")
                 self.reset_ui_state()
-                self.set_processing_state(False)  # Vraća u početno stanje
+                self.set_processing_state(False)
                 self.set_inputs_enabled(True)
 
         if not self.is_paused:
@@ -373,19 +373,16 @@ class PyramidToolGUI(QMainWindow):
     def set_processing_state(self, is_processing, is_paused=False):
         self.is_processing = is_processing
         if is_processing:
-            # Stanje tijekom obrade: Stop i Exit omogućeni, Start i Continue onemogućeni
             self.start_btn.setEnabled(False)
             self.stop_btn.setEnabled(True)
             self.continue_btn.setEnabled(False)
             self.exit_btn.setEnabled(True)
         elif is_paused:
-            # Stanje nakon pauziranja: Continue i Exit omogućeni, Start i Stop onemogućeni
             self.start_btn.setEnabled(False)
             self.stop_btn.setEnabled(False)
             self.continue_btn.setEnabled(True)
             self.exit_btn.setEnabled(True)
         else:
-            # Početno stanje ili nakon završetka: Start i Exit omogućeni, Stop i Continue onemogućeni
             self.start_btn.setEnabled(True)
             self.stop_btn.setEnabled(False)
             self.continue_btn.setEnabled(False)

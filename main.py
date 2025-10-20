@@ -4,8 +4,8 @@
 __author__ = 'David'
 
 """
-main.py - Glavna skripta za pokretanje aplikacije
-Upravlja GUI-jem i postavlja splash ekran
+main.py - Main application script for enhanced GDAL-based raster tiling
+Manages GUI and splash screen for the Pyramid Tool application
 """
 
 import sys
@@ -20,10 +20,10 @@ from logger import setup_logger
 
 
 def main():
-    """Glavna funkcija aplikacije"""
+    """Glavna aplikacijska funkcija"""
 
     app = QApplication(sys.argv)
-    app.setApplicationName("Pyramid Tool")
+    app.setApplicationName("Pyramid Tool - Enhanced GDAL Tiling")
 
     icon_path = Path(__file__).parent / "icon" / "protok_ico.ico"
     if icon_path.exists():
@@ -40,7 +40,7 @@ def main():
 
     logger = setup_logger()
     logger.info("=" * 80)
-    logger.info("Pokrenuta nova instanca Pyramid Tool aplikacije")
+    logger.info("Starting new instance of Enhanced Pyramid Tool application")
     logger.info("=" * 80)
 
     window = PyramidToolGUI()
@@ -51,7 +51,7 @@ def main():
 
     exit_code = app.exec_()
 
-    logger.info("Zatvorena instanca aplikacije")
+    logger.info("Application instance closed")
 
     sys.exit(exit_code)
 
